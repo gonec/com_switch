@@ -68,21 +68,39 @@ class ComWidget(QWidget):
 				self.flConnected = True
 				self.pbCon.setText('Disconnect')	
 				flRun = True
+				
 				def thread1():
+					print('STARTED')
+					buff_a=b''
+					buff_b=b''
+					a_printed = False
+					b_printed = False
 					while flRun:	
-						bt_a = ser_a.read(1)
-						if ( bt_a != b''):	
-							self.textBrowser.append('ACCEPTED:'+bt_a)
-							r = ser_b.write(bt_a)
-							#print('WRITED: ' + str(r) )
-						bt_b = ser_b.read(1)
-						if ( bt_b !=b''):
-							self.textBrowser.append('ACCEPTED:'+bt_a[0])
-							r = ser_a.write(bt_b)
+						bt_a = self.ser_a.read(1)
+						if ( bt_a != b'' and bt_a[0]!=0):	
+							buff_a = buff_a + bt_a
+							a_printed = False
+							if b_printed != True:
+								#self.textBrowser.append(buff_b.decode() )
+								print(buff_b)
+								b_printed = True
+								buff_b = b''
+							r = self.ser_b.write(bt_a)
+							
+						bt_b = self.ser_b.read(1)
+						if ( bt_b !=b'' and bt_b[0]!=0):
+							b_printed = False
+							buff_b = buff_b + bt_b
+							if a_printed != True:
+								#self.textBrowser.append(buff_a.decode())
+								print(buff_a)
+								a_printed = True
+								buff_a=b''
+							r = self.ser_a.write(bt_b)
 
 					return
 				thread_a = threading.Thread(target=thread1)
-	
+				thread_a.start()
 		else:
 			if self.ser_a.is_open():
 				self.ser_a.close()
