@@ -4,28 +4,37 @@ from serial.tools.list_ports import comports
 import threading
 import time
 
-
-
-from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QHBoxLayout, QPushButton, QTextBrowser, QVBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QHBoxLayout, QPushButton, QTextBrowser, QVBoxLayout, QGridLayout
 
 class ComWidget(QWidget):
-	
 	def __init__(self):
 		super().__init__()
-		self.hLayout = QHBoxLayout()
+		self.bs = serial.Serial()	
+		self.gridLayout = QGridLayout()
 		self.vLayout = QVBoxLayout()
 		self.cbA = QComboBox()
 		self.cbB = QComboBox()		
+		self.cbBaudrateA = QComboBox()		
+		self.cbBaudrateB = QComboBox()	
+		baudrates = [str(b) for b in self.bs.BAUDRATES]	
+		self.cbBaudrateA.addItems(baudrates)	
+		self.cbBaudrateB.addItems(baudrates)	
+		#self.cbBaudRate.insertItems(serial.Serial.BAUDRATES)
 		self.flConnected = False		
-		ports = [p.device for p in comports()]
-		self.cbA.addItems(ports)	
-		self.cbB.addItems(ports)	
+		#ports = [p.device for p in comports()]
+		#self.cbA.addItems(ports)	
+		#self.cbB.addItems(ports)	
+		self.pbRescan = QPushButton()
+		self.pbRescan.setText('Rescan')
 		self.pbCon = QPushButton()
 		self.pbCon.setText('Connect')
-		self.hLayout.addWidget(self.cbA)
-		self.hLayout.addWidget(self.cbB)
-		self.hLayout.addWidget(self.pbCon)
-		self.vLayout.addLayout(self.hLayout)	
+		self.gridLayout.addWidget(self.cbA, 0, 0)
+		self.gridLayout.addWidget(self.cbB, 0, 1)
+		self.gridLayout.addWidget(self.cbBaudrateA, 1, 0) 
+		self.gridLayout.addWidget(self.cbBaudrateB, 1, 1)
+		self.gridLayout.addWidget(self.pbCon)
+		self.gridLayout.addWidget(self.pbRescan)
+		self.vLayout.addLayout(self.gridLayout)	
 		self.setLayout(self.vLayout)
 		self.setWindowTitle('Com switch')
 		
@@ -34,19 +43,49 @@ class ComWidget(QWidget):
 		self.cbA.activated[int].connect( self.activated_a )	
 		self.cbB.activated[int].connect( self.activated_a )	
 		self.pbCon.clicked.connect( self.com_connect )	
-	
+		self.pbRescan.clicked.connect( self.rescan )
+		self.gridLayout.setSpacing(15)
+		self.rescan()	
+	def rescan(self):
+		ports = [p.device for p in comports()]
+		self.cbA.clear()	
+		self.cbB.clear()	
+		self.cbA.addItems(ports)
+		if len(ports) < 2:
+			self.pbCon.setEnabled(false)
+		else:
+			self.pbCon.setEnabled(True)
+			self.cbB.addItems(ports)
+			txt_a = self.cbA.currentText()	
+			index = self.cbB.findText(txt_a)
+			self.cbB.removeItem(index)
+				
 	def activated_a(self, indx):
-		pass
+		txt_b = self.cbB.currentText()	
+		txt_a = self.cbA.currentText()	
+		if txt_b == txt_a:
+			self.pbCon.setEnabled(False)	
+		else:
+			self.pbCon.setEnabled(True)
 	
 	def activated_b(self, indx):
-		pass
+		txt_b = self.cbB.currentText()	
+		txt_a = self.cbA.currentText()	
+		if txt_b == txt_a:
+			self.pbCon.setEnabled(False)	
+		else:
+			self.pbCon.setEnabled(True)
+
 	
 	def com_connect(self):
 		if not self.flConnected:	
 				self.com_a = self.cbA.currentText()
 				self.com_b = self.cbB.currentText()
+				self.speed_a = self.cbBaudrateA.currentText()
+				self.speed_b = self.cbBaudrateB.currentText()
+
 				try:
-					self.ser_a = serial.Serial(self.com_a, 115200, timeout=0)	
+					self.ser_a = serial.Serial(self.com_a, self.speed_a, timeout=0)	
 					self.cbA.setEnabled(False)
 				except:
 					self.cbA.setEnabled(True)
@@ -55,7 +94,7 @@ class ComWidget(QWidget):
 					return 				
 				
 				try:
-					self.ser_b = serial.Serial(self.com_b, 115200, timeout=0)	
+					self.ser_b = serial.Serial(self.com_b, self.speed_b, timeout=0)	
 					self.cbB.setEnabled(False)
 				except:
 					self.cbA.setEnabled(True)
@@ -108,8 +147,6 @@ class ComWidget(QWidget):
 			if self.ser_b.is_open():
 				self.ser_b.close()
 
-			self.ser_a.close()
-			self.ser_b.close()
 			self.pbCon.setText('Connect')	
 			self.flConnected = False
 			flRun = False		
