@@ -3,7 +3,7 @@ import serial
 from serial.tools.list_ports import comports
 import threading
 import time
-
+from datetime import datetime
 from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QHBoxLayout, QPushButton, QTextBrowser, QVBoxLayout, QGridLayout
 
 class ComWidget(QWidget):
@@ -16,7 +16,7 @@ class ComWidget(QWidget):
 		self.cbB = QComboBox()		
 		self.cbBaudrateA = QComboBox()		
 		self.cbBaudrateB = QComboBox()	
-		baudrates = [str(b) for b in self.bs.BAUDRATES]	
+		baudrates = [str(b) for b in self.bs.BAUDRATES if b>=9600 ]	
 		self.cbBaudrateA.addItems(baudrates)	
 		self.cbBaudrateB.addItems(baudrates)	
 		#self.cbBaudRate.insertItems(serial.Serial.BAUDRATES)
@@ -115,8 +115,9 @@ class ComWidget(QWidget):
 					a_printed = False
 					b_printed = False
 					while flRun:	
+						last_read=datetime.now()		
 						bt_a = self.ser_a.read(1)
-						if ( bt_a != b'' and bt_a[0]!=0):	
+						if ( bt_a != b'' and bt_a[0]!=0 ):	
 							buff_a = buff_a + bt_a
 							a_printed = False
 							if b_printed != True:
@@ -125,9 +126,9 @@ class ComWidget(QWidget):
 								b_printed = True
 								buff_b = b''
 							r = self.ser_b.write(bt_a)
-							
+							continue	
 						bt_b = self.ser_b.read(1)
-						if ( bt_b !=b'' and bt_b[0]!=0):
+						if ( bt_b != b'' and bt_b[0] != 0 ):
 							b_printed = False
 							buff_b = buff_b + bt_b
 							if a_printed != True:
@@ -136,11 +137,21 @@ class ComWidget(QWidget):
 								a_printed = True
 								buff_a=b''
 							r = self.ser_a.write(bt_b)
-
+							continue
+						if a_printed!=True:
+							print(buff_a)
+							a_printed = True
+							buff_a=b''
+						if b_printed!=True:
+							print(buff_a)
+							b_printed = True
+							buff_b=b''
+	
 					return
-				thread_a = threading.Thread(target=thread1)
-				thread_a.start()
+				self.thread_a = threading.Thread(target=thread1)
+				self.thread_a.start()
 		else:
+			flRun = False		
 			if self.ser_a.is_open():
 				self.ser_a.close()
 			
@@ -149,7 +160,6 @@ class ComWidget(QWidget):
 
 			self.pbCon.setText('Connect')	
 			self.flConnected = False
-			flRun = False		
 	def start():
 		pass
 def main():
