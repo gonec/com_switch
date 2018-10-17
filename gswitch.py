@@ -4,11 +4,14 @@ from serial.tools.list_ports import comports
 import threading
 import time
 from datetime import datetime
-from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QHBoxLayout, QPushButton, QTextBrowser, QVBoxLayout, QGridLayout
-
+from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QHBoxLayout, QPushButton, QTextBrowser, QVBoxLayout, QGridLayout, QMenu, QMenuBar
+class UserSettings(QWidget):
+	def __init_(self):
+		pass
 class ComWidget(QWidget):
 	def __init__(self):
 		super().__init__()
+		
 		self.bs = serial.Serial()	
 		self.gridLayout = QGridLayout()
 		self.vLayout = QVBoxLayout()
@@ -19,6 +22,9 @@ class ComWidget(QWidget):
 		baudrates = [str(b) for b in self.bs.BAUDRATES if b>=9600 ]	
 		self.cbBaudrateA.addItems(baudrates)	
 		self.cbBaudrateB.addItems(baudrates)	
+		db_pos = self.cbBaudrateA.findText('115200')	
+		self.cbBaudrateA.setCurrentIndex(db_pos)
+		self.cbBaudrateB.setCurrentIndex(db_pos)
 		#self.cbBaudRate.insertItems(serial.Serial.BAUDRATES)
 		self.flConnected = False		
 		#ports = [p.device for p in comports()]
@@ -46,6 +52,12 @@ class ComWidget(QWidget):
 		self.pbRescan.clicked.connect( self.rescan )
 		self.gridLayout.setSpacing(15)
 		self.rescan()	
+		self.default_speed = 115200
+		print(self.width())
+		width = 340 
+		height = 380 
+		self.resize(width, height)	
+		print(self.width())
 	def rescan(self):
 		ports = [p.device for p in comports()]
 		self.cbA.clear()	
