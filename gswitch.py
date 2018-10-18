@@ -58,6 +58,7 @@ class ComWidget(QWidget):
 		height = 380 
 		self.resize(width, height)	
 		print(self.width())
+	
 	def rescan(self):
 		ports = [p.device for p in comports()]
 		self.cbA.clear()	
@@ -120,6 +121,15 @@ class ComWidget(QWidget):
 				self.pbCon.setText('Disconnect')	
 				flRun = True
 				
+				def make_buff(buff_b):
+					str_=""
+					for b in buff_b:
+						if b>31 and b < 128:
+							str_=str_ + chr(b)
+						else:
+							str_=str_ + str(hex(b))
+					return str_
+												
 				def thread1():
 					print('STARTED')
 					buff_a=b''
@@ -137,8 +147,9 @@ class ComWidget(QWidget):
 							a_printed = False
 							a_accepted = datetime.now()
 							if b_printed != True:
-								str=buff_b.decode('ascii') 
-								self.textBrowser.append(str)
+								#str=buff_b.decode('ascii') 
+								str_ = make_buff(buff_a)
+								self.textBrowser.append(str_)
 								print(buff_b)
 								b_printed = True
 								buff_b = b''
@@ -151,8 +162,10 @@ class ComWidget(QWidget):
 							buff_b = buff_b + bt_b
 							b_accepted = datetime.now()
 							if a_printed != True:
-								str=buff_b.decode('ascii') 
-								self.textBrowser.append(str)
+								#str=buff_b.decode('ascii') 
+								str_=""
+								str_ = make_buff(buff_b)	
+								self.textBrowser.append(str_)
 								print(buff_a)
 								a_printed = True
 								buff_a=b''
@@ -164,23 +177,19 @@ class ComWidget(QWidget):
 						if  b_passed > .1 and b_printed == False:
 							print('PUT BY TIMEOUT B: ', b_passed)
 							b_printed = True
-							str = buff_b.decode('ascii') 
-							self.textBrowser.append(str)
+							#str = buff_b.decode('ascii') 
+							str_=""
+							str_ = make_buff(buff_b)
+							self.textBrowser.append(str_)
 							buff_b=b''	
 						if ( datetime.now() - a_accepted ).total_seconds()> .1 and a_printed == False:
 							print('PUT BY DATE')
 							a_printed = True
-							str = buff_a.decode('ascii') 
-							self.textBrowser.append(str)
+							#str = buff_a.decode('ascii') 
+							str_=''
+							str_ = make_buff(buff_a)
+							self.textBrowser.append(str_)
 							buff_a=b''	
-	#if a_printed!=True:
-						#	print(buff_a)
-						#	a_printed = True
-						#	buff_a=b''
-						#if b_printed!=True:
-						#	print(buff_a)
-						#	b_printed = True
-						#	buff_b=b''
 	
 					return
 				self.thread_a = threading.Thread(target=thread1)
