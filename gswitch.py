@@ -197,7 +197,7 @@ class ComWidget(QWidget):
 			
 			#if self.ser_b.is_open:
 				#self.ser_b.close()
-			time.sleep(3)
+			time.sleep(1)
 			self.pbCon.setText('Connect')	
 			self.cbA.setEnabled(True)	
 			self.cbB.setEnabled(True)	
