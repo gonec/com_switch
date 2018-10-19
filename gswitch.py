@@ -45,6 +45,7 @@ class ComWidget(QWidget):
 		self.setWindowTitle('Com switch')
 		
 		self.textBrowser = QTextBrowser()	
+		self.scrolBar = self.textBrowser.verticalScrollBar()
 		self.vLayout.addWidget(self.textBrowser)	
 		self.cbA.activated[int].connect( self.activated_a )	
 		self.cbB.activated[int].connect( self.activated_a )	
@@ -119,8 +120,13 @@ class ComWidget(QWidget):
 				
 				self.flConnected = True
 				self.pbCon.setText('Disconnect')	
-				flRun = True
-				
+				self.flRun = True
+				def display_text(buff):
+					str_ = ""	
+					str_ = make_buff(buff)
+					self.textBrowser.append(str_)
+					self.scrolBar.setValue( self.scrolBar.maximum() )
+
 				def make_buff(buff_b):
 					str_=""
 					for b in buff_b:
@@ -138,8 +144,8 @@ class ComWidget(QWidget):
 					b_printed = True 
 					b_accepted = datetime.now()	
 					a_accepted = datetime.now()	
-
-					while flRun:	
+					print('COM THREAD:'+ str( threading.current_thread() ) )
+					while self.flRun:	
 						bt_a = self.ser_a.read(1)
 						if ( bt_a != b'' and bt_a[0]!=0 ):	
 							print(bt_a[0])
@@ -147,9 +153,7 @@ class ComWidget(QWidget):
 							a_printed = False
 							a_accepted = datetime.now()
 							if b_printed != True:
-								#str=buff_b.decode('ascii') 
-								str_ = make_buff(buff_a)
-								self.textBrowser.append(str_)
+								display_text(buff_b)
 								print(buff_b)
 								b_printed = True
 								buff_b = b''
@@ -162,50 +166,42 @@ class ComWidget(QWidget):
 							buff_b = buff_b + bt_b
 							b_accepted = datetime.now()
 							if a_printed != True:
-								#str=buff_b.decode('ascii') 
-								str_=""
-								str_ = make_buff(buff_b)	
-								self.textBrowser.append(str_)
+								display_text(buff_a)
 								print(buff_a)
 								a_printed = True
 								buff_a=b''
 							r = self.ser_a.write(bt_b)
 							continue
-						#print( (datetime.now()-b_accepted ).total_seconds(), b_printed )	
-						#print( (datetime.now()-a_accepted ).total_seconds(), a_printed )	
 						b_passed = (datetime.now() - b_accepted ).total_seconds()
 						if  b_passed > .1 and b_printed == False:
 							print('PUT BY TIMEOUT B: ', b_passed)
 							b_printed = True
-							#str = buff_b.decode('ascii') 
-							str_=""
-							str_ = make_buff(buff_b)
-							self.textBrowser.append(str_)
+							display_text(buff_b)
 							buff_b=b''	
 						if ( datetime.now() - a_accepted ).total_seconds()> .1 and a_printed == False:
 							print('PUT BY DATE')
+							display_text(buff_a)
 							a_printed = True
-							#str = buff_a.decode('ascii') 
-							str_=''
-							str_ = make_buff(buff_a)
-							self.textBrowser.append(str_)
 							buff_a=b''	
-	
+					self.ser_a.close()
+					self.ser_b.close()		
+					print('THREAD STOPPING')
 					return
 				self.thread_a = threading.Thread(target=thread1)
 				self.thread_a.start()
 		else:
-			flRun = False		
-			if self.ser_a.is_open():
-				self.ser_a.close()
+			print('SET FL_RUN TO STOP')	
+			self.flRun = False		
+			#if self.ser_a.is_open:
+				#self.ser_a.close()
 			
-			if self.ser_b.is_open():
-				self.ser_b.close()
-
+			#if self.ser_b.is_open:
+				#self.ser_b.close()
+			time.sleep(3)
 			self.pbCon.setText('Connect')	
+			self.cbA.setEnabled(True)	
+			self.cbB.setEnabled(True)	
 			self.flConnected = False
-	def start():
-		pass
 def main():
 	app = QApplication(sys.argv)
 	w = ComWidget()
