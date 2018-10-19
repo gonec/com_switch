@@ -55,8 +55,8 @@ class ComWidget(QWidget):
 		self.rescan()	
 		self.default_speed = 115200
 		print(self.width())
-		width = 340 
-		height = 380 
+		width = 400 
+		height = 600 
 		self.resize(width, height)	
 		print(self.width())
 	
