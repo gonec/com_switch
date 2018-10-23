@@ -5,9 +5,7 @@ import threading
 import time
 from datetime import datetime
 from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QHBoxLayout, QPushButton, QTextBrowser, QVBoxLayout, QGridLayout, QMenu, QMenuBar, QCheckBox
-class UserSettings(QWidget):
-	def __init_(self):
-		pass
+from PyQt5 import QtCore, QtGui 
 class ComWidget(QWidget):
 	def __init__(self):
 		super().__init__()
@@ -33,10 +31,12 @@ class ComWidget(QWidget):
 		self.pbRescan.setText('Rescan')
 		self.pbCon = QPushButton()
 		self.pbCon.setText('Connect')
+
+
 		
 		self.cbShowAscii = QCheckBox('Ascii')	
 		self.flAscii = False		
-		
+
 		self.gridLayout.addWidget(self.cbA, 0, 0)
 		self.gridLayout.addWidget(self.cbB, 0, 1)
 		self.gridLayout.addWidget(self.cbBaudrateA, 1, 0) 
@@ -61,7 +61,7 @@ class ComWidget(QWidget):
 		self.rescan()	
 		self.default_speed = 115200
 		print(self.width())
-		width = 440 
+		width = 600 
 		height = 500 
 		self.resize(width, height)	
 		print(self.width())
@@ -213,11 +213,18 @@ class ComWidget(QWidget):
 			
 			#if self.ser_b.is_open:
 				#self.ser_b.close()
-			time.sleep(1)
+			time.sleep(.5)
 			self.pbCon.setText('Connect')	
 			self.cbA.setEnabled(True)	
 			self.cbB.setEnabled(True)	
 			self.flConnected = False
+
+	def closeEvent(self, event):
+		self.flRun = False		
+		time.sleep(1)
+		event.accept()
+		print('CLOSE EVENT')
+
 def main():
 	app = QApplication(sys.argv)
 	w = ComWidget()
