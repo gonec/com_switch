@@ -4,14 +4,13 @@ from serial.tools.list_ports import comports
 import threading
 import time
 from datetime import datetime
-from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QHBoxLayout, QPushButton, QTextBrowser, QVBoxLayout, QGridLayout, QMenu, QMenuBar
+from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QHBoxLayout, QPushButton, QTextBrowser, QVBoxLayout, QGridLayout, QMenu, QMenuBar, QCheckBox
 class UserSettings(QWidget):
 	def __init_(self):
 		pass
 class ComWidget(QWidget):
 	def __init__(self):
 		super().__init__()
-		
 		self.bs = serial.Serial()	
 		self.gridLayout = QGridLayout()
 		self.vLayout = QVBoxLayout()
@@ -34,32 +33,46 @@ class ComWidget(QWidget):
 		self.pbRescan.setText('Rescan')
 		self.pbCon = QPushButton()
 		self.pbCon.setText('Connect')
+		
+		self.cbShowAscii = QCheckBox('Ascii')	
+		self.flAscii = False		
+		
 		self.gridLayout.addWidget(self.cbA, 0, 0)
 		self.gridLayout.addWidget(self.cbB, 0, 1)
 		self.gridLayout.addWidget(self.cbBaudrateA, 1, 0) 
 		self.gridLayout.addWidget(self.cbBaudrateB, 1, 1)
 		self.gridLayout.addWidget(self.pbCon)
 		self.gridLayout.addWidget(self.pbRescan)
+		self.gridLayout.addWidget(self.cbShowAscii)
 		self.vLayout.addLayout(self.gridLayout)	
 		self.setLayout(self.vLayout)
 		self.setWindowTitle('Com switch')
 		
 		self.textBrowser = QTextBrowser()	
-		self.scrolBar = self.textBrowser.verticalScrollBar()
+		self.scrollBar = self.textBrowser.verticalScrollBar()
+		self.scrollBar.rangeChanged.connect(lambda: self.scrollBar.setValue(self.scrollBar.maximum()))
 		self.vLayout.addWidget(self.textBrowser)	
 		self.cbA.activated[int].connect( self.activated_a )	
 		self.cbB.activated[int].connect( self.activated_a )	
 		self.pbCon.clicked.connect( self.com_connect )	
+		self.cbShowAscii.stateChanged[int].connect(self.switch_ascii)	
 		self.pbRescan.clicked.connect( self.rescan )
 		self.gridLayout.setSpacing(15)
 		self.rescan()	
 		self.default_speed = 115200
 		print(self.width())
-		width = 400 
-		height = 600 
+		width = 440 
+		height = 500 
 		self.resize(width, height)	
 		print(self.width())
 	
+	def switch_ascii(self,code):
+		if code == 2:
+			self.flAscii = True
+		else:
+			self.flAscii = False
+		pass	
+
 	def rescan(self):
 		ports = [p.device for p in comports()]
 		self.cbA.clear()	
@@ -124,8 +137,9 @@ class ComWidget(QWidget):
 				def display_text(buff):
 					str_ = ""	
 					str_ = make_buff(buff)
+					self.scrollBar.setValue( self.scrollBar.maximum()  )
 					self.textBrowser.append(str_)
-					self.scrolBar.setValue( self.scrolBar.maximum() )
+					self.scrollBar.setValue( self.scrollBar.maximum()  )
 
 				def make_buff(buff_b):
 					str_=""
@@ -133,7 +147,9 @@ class ComWidget(QWidget):
 						if b>31 and b < 128:
 							str_=str_ + chr(b)
 						else:
-							str_=str_ + str(hex(b))
+							if self.flAscii:
+								str_=str_ + str(hex(b))
+
 					return str_
 												
 				def thread1():
