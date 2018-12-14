@@ -79,7 +79,7 @@ class ComWidget(QWidget):
 		self.cbB.clear()	
 		self.cbA.addItems(ports)
 		if len(ports) < 2:
-			self.pbCon.setEnabled(false)
+			self.pbCon.setEnabled(False)
 		else:
 			self.pbCon.setEnabled(True)
 			self.cbB.addItems(ports)
