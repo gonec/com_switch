@@ -188,14 +188,14 @@ class ComWidget(QWidget):
 								buff_a=b''
 							r = self.ser_a.write(bt_b)
 							continue
-						b_passed = (datetime.now() - b_accepted ).total_seconds()
-						if  b_passed > .1 and b_printed == False:
-							print('PUT BY TIMEOUT B: ', b_passed)
+							
+						if  ( (datetime.now() - b_accepted ).total_seconde() > .2 ) and b_printed == False:
+							print('PUT BY TIMEOUT B: ')
 							b_printed = True
 							display_text(buff_b)
 							buff_b=b''	
-						if ( datetime.now() - a_accepted ).total_seconds()> .1 and a_printed == False:
-							print('PUT BY DATE')
+						if ( ( datetime.now() - a_accepted ).total_seconds() > .2 ) and a_printed == False:
+							print('PUT BY TIMEOUT A: ')
 							display_text(buff_a)
 							a_printed = True
 							buff_a=b''	
